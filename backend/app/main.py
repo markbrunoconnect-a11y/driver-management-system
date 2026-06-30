@@ -16,7 +16,7 @@ app.include_router(tickets.router)
 app.include_router(vehicles.router)
 
 # Serve frontend
-frontend_dir = os.path.join(os.path.dirname(__file__), "frontend")
+frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
 app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
 
 @app.get("/")
