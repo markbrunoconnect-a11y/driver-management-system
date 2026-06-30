@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Driver Management System</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f0f4f8;color:#222;min-height:100vh}
+.screen{display:none}.screen.active{display:block}
+.topbar{background:#1a3a5c;color:white;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar h1{font-size:16px;font-weight:700;letter-spacing:.5px}
+.topbar-right{display:flex;gap:8px;align-items:center;font-size:13px}
+.content{max-width:1100px;margin:0 auto;padding:20px}
+.card{background:white;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.card-title{font-size:15px;font-weight:700;margin-bottom:14px;color:#1a3a5c}
+.btn{display:inline-block;padding:10px 18px;border-radius:8px;border:none;cursor:pointer;font-size:14px;font-weight:600;transition:opacity .15s}
+.btn:hover{opacity:.85}.btn-primary{background:#1a3a5c;color:white}
+.btn-success{background:#27AE60;color:white}.btn-danger{background:#E74C3C;color:white}
+.btn-outline{background:white;color:#1a3a5c;border:2px solid #1a3a5c}
+.btn-amber{background:#E67E22;color:white}.btn-sm{padding:6px 12px;font-size:13px}
+.btn-grey{background:#eee;color:#555;border:1px solid #ddd}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;color:#555;margin-bottom:4px;font-weight:600}
+.field input,.field select,.field textarea{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;font-family:Arial}
+.field textarea{min-height:80px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:#2E75B6}
+.hint{font-size:12px;color:#888;margin-top:3px}
+/* Login */
+#loginScreen{display:none;align-items:center;justify-content:center;min-height:100vh;background:#1a3a5c}
+#loginScreen.active{display:flex}
+.login-card{background:white;border-radius:16px;padding:36px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.25)}
+.login-title{font-size:22px;font-weight:700;color:#1a3a5c;text-align:center;margin-bottom:4px}
+.login-sub{font-size:13px;color:#888;text-align:center;margin-bottom:24px}
+/* Dashboard */
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:24px}
+.dash-btn{background:white;border-radius:12px;padding:22px 16px;text-align:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.07);border:2px solid transparent;transition:all .15s}
+.dash-btn:hover{border-color:#1a3a5c;box-shadow:0 4px 16px rgba(0,0,0,.12)}
+.dash-btn-icon{font-size:32px;margin-bottom:8px}
+.dash-btn-label{font-size:14px;font-weight:700;color:#1a3a5c}
+.dash-btn-sub{font-size:12px;color:#888;margin-top:4px}
+/* Stats */
+.stats-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.stat-box{flex:1;min-width:110px;background:white;border-radius:10px;padding:14px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.stat-val{font-size:24px;font-weight:700;color:#1a3a5c}
+.stat-lbl{font-size:11px;color:#888;margin-top:2px}
+.stat-box.alert .stat-val{color:#E74C3C}
+/* Badges */
+.badge{display:inline-block;padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700}
+.badge-green{background:#e8f5e9;color:#1B5E20}.badge-red{background:#fde8e8;color:#C0392B}
+.badge-amber{background:#fff3e0;color:#BF360C}.badge-blue{background:#e3f0fb;color:#1a3a5c}
+.badge-grey{background:#f0f0f0;color:#555}
+/* Table */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 10px;background:#f0f4f8;color:#555;font-weight:700;white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid #f0f0f0;vertical-align:top}
+tr:hover td{background:#fafafa}
+/* Modal */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:16px}
+.modal-bg.open{display:flex}
+.modal{background:white;border-radius:16px;padding:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:17px;font-weight:700;color:#1a3a5c;margin-bottom:16px}
+/* Toast */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a3a5c;color:white;padding:12px 24px;border-radius:24px;font-size:14px;z-index:9999;display:none;max-width:90%}
+/* Tabs */
+.tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid #e0e7ef;padding-bottom:0;flex-wrap:wrap}
+.tab{padding:10px 16px;cursor:pointer;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tab.active{color:#1a3a5c;border-bottom-color:#1a3a5c}
+/* Calendar */
+.cal-grid{display:grid;gap:1px;background:#e0e7ef;border:1px solid #e0e7ef;border-radius:8px;overflow:hidden;font-size:12px}
+.cal-header{background:#1a3a5c;color:white;padding:8px;font-weight:700;text-align:center}
+.cal-driver{background:#f8fafc;padding:8px;font-weight:600;font-size:12px;border-right:1px solid #e0e7ef}
+.cal-cell{background:white;padding:6px;min-height:60px;cursor:pointer;transition:background .1s}
+.cal-cell:hover{background:#e8f4fd}
+.cal-chip{background:#1a3a5c;color:white;border-radius:4px;padding:2px 5px;margin-bottom:2px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-chip.overdue{background:#E74C3C}
+.cal-chip.completed{background:#27AE60}
+/* Ticket card */
+.ticket-card{background:white;border-radius:10px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.07);border-left:4px solid #1a3a5c;cursor:pointer;transition:box-shadow .1s}
+.ticket-card:hover{box-shadow:0 3px 12px rgba(0,0,0,.12)}
+.ticket-card.overdue{border-left-color:#E74C3C}
+.ticket-card.completed{border-left-color:#27AE60}
+.ticket-card.unassigned{border-left-color:#E67E22}
+.ticket-num{font-size:11px;color:#888;font-weight:700}
+.ticket-title{font-size:14px;font-weight:700;color:#1a3a5c;margin:3px 0}
+.ticket-meta{font-size:12px;color:#666}
+/* Print */
+@media print{
+  .topbar,.no-print{display:none!important}
+  .print-only{display:block!important}
+  body{background:white}
+  .modal-bg{display:none!important}
+}
+.print-only{display:none}
+/* Back button */
+.back-btn{margin-bottom:16px}
+/* Divider */
+.divider{border:none;border-top:1px solid #eee;margin:14px 0}
+/* Help box */
+.help-box{background:#e8f4fd;border-left:4px solid #2E75B6;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#1a4a6e;line-height:1.5}
+/* Fleet alert */
+.fleet-alert{background:#fde8e8;border-left:4px solid #E74C3C;border-radius:6px;padding:10px 14px;margin-bottom:8px;font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="screen active">
+  <div class="login-card">
+    <div class="login-title">🚚 Driver Management</div>
+    <div class="login-sub" id="loginSubText">Sign in to continue</div>
+    <div id="loginForm">
+      <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="you@company.com"></div>
+      <div class="field"><label>Password</label><input type="password" id="loginPwd"></div>
+      <div id="loginErr" style="color:#E74C3C;font-size:13px;margin-bottom:10px;display:none"></div>
+      <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Sign In</button>
+      <div style="text-align:center;margin-top:14px"><button class="btn btn-outline btn-sm" onclick="showBootstrap()">First time setup →</button></div>
+    </div>
+    <div id="bootstrapForm" style="display:none">
+      <div style="background:#fff8e1;border-radius:8px;padding:10px;font-size:13px;color:#BF360C;margin-bottom:14px">First time setup — creates the administrator account.</div>
+      <div class="field"><label>Your Name</label><input type="text" id="bsName"></div>
+      <div class="field"><label>Email</label><input type="email" id="bsEmail"></div>
+      <div class="field"><label>Password</label><input type="password" id="bsPwd"></div>
+      <div id="bsErr" style="color:#E74C3C;font-size:13px;margin-bottom:10px;display:none"></div>
+      <button class="btn btn-success" style="width:100%" onclick="doBootstrap()">Create Admin Account</button>
+      <div style="text-align:center;margin-top:14px"><button class="btn btn-outline btn-sm" onclick="showLoginForm()">← Back to sign in</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="appScreen" class="screen">
+  <div class="topbar">
+    <h1 id="topbarTitle">🚚 Driver Management System</h1>
+    <div class="topbar-right">
+      <span id="topbarUser" style="font-size:13px"></span>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:white" onclick="goHome()">Home</button>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:white" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div id="viewDashboard">
+      <div id="statsRow" class="stats-row"></div>
+      <div id="fleetAlerts" style="margin-bottom:16px"></div>
+      <div class="dash-grid" id="dashGrid"></div>
+    </div>
+
+    <!-- TICKETS LIST -->
+    <div id="viewTickets" style="display:none">
+      <div class="back-btn no-print"><button class="btn btn-outline btn-sm" onclick="goHome()">← Home</button></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <h2 style="color:#1a3a5c;font-size:18px">Action Tickets</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" class="no-print">
+          <select id="ticketFilterStatus" onchange="loadTickets()" style="border:1px solid #ddd;border-radius:6px;padding:6px 10px;font-size:13px">
+            <option value="">All Statuses</option>
+            <option value="unassigned">Unassigned</option>
+            <option value="assigned">Assigned</option>
+            <option value="overdue">Overdue</option>
+            <option value="completed">Completed</option>
+          </select>
+          <button class="btn btn-primary btn-sm" id="newTicketBtn" onclick="openNewTicketModal()" style="display:none">+ New Ticket</button>
+        </div>
+      </div>
+      <div id="ticketList"></div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div id="viewCalendar" style="display:none">
+      <div class="back-btn no-print"><button class="btn btn-outline btn-sm" onclick="goHome()">← Home</button></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <h2 style="color:#1a3a5c;font-size:18px">Driver Schedule — Week View</h2>
+        <div style="display:flex;gap:8px;align-items:center" class="no-print">
+          <button class="btn btn-outline btn-sm" onclick="calNavWeek(-1)">← Prev</button>
+          <span id="calWeekLabel" style="font-weight:700;font-size:13px;min-width:180px;text-align:center"></span>
+          <button class="btn btn-outline btn-sm" onclick="calNavWeek(1)">Next →</button>
+        </div>
+      </div>
+      <div id="calendarGrid"></div>
+    </div>
+
+    <!-- DRIVER REPORTS -->
+    <div id="viewReports" style="display:none">
+      <div class="back-btn no-print"><button class="btn btn-outline btn-sm" onclick="goHome()">← Home</button></div>
+      <h2 style="color:#1a3a5c;font-size:18px;margin-bottom:16px">Driver Schedule Report</h2>
+      <div class="card no-print">
+        <div class="field"><label>Select Driver</label>
+          <select id="reportDriverSelect" onchange="loadDriverReport()">
+            <option value="">— Select a driver —</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div class="field" style="flex:1"><label>From Date</label><input type="date" id="reportFrom" onchange="loadDriverReport()"></div>
+          <div class="field" style="flex:1"><label>To Date</label><input type="date" id="reportTo" onchange="loadDriverReport()"></div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="printReport()" id="printReportBtn" style="display:none">🖨 Save / Print PDF</button>
+      </div>
+      <div id="reportContent"></div>
+    </div>
+
+    <!-- VEHICLE MANAGEMENT -->
+    <div id="viewVehicles" style="display:none">
+      <div class="back-btn no-print"><button class="btn btn-outline btn-sm" onclick="goHome()">← Home</button></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <h2 style="color:#1a3a5c;font-size:18px">Fleet Management</h2>
+        <button class="btn btn-primary btn-sm no-print" onclick="openVehicleModal()">+ Add Vehicle</button>
+      </div>
+      <div id="vehicleList"></div>
+    </div>
+
+    <!-- VEHICLE DETAIL -->
+    <div id="viewVehicleDetail" style="display:none">
+      <div class="back-btn no-print"><button class="btn btn-outline btn-sm" onclick="showView('viewVehicles');loadVehicles()">← Fleet</button></div>
+      <h2 id="vdTitle" style="color:#1a3a5c;font-size:18px;margin-bottom:14px"></h2>
+      <div class="tabs">
+        <div class="tab active" onclick="switchVehicleTab('service')">Service History</div>
+        <div class="tab" onclick="switchVehicleTab('maintenance')">Scheduled Maintenance</div>
+        <div class="tab" onclick="switchVehicleTab('fuel')">Fuel Log</div>
+        <div class="tab" onclick="switchVehicleTab('incidents')">Incidents</div>
+        <div class="tab" onclick="switchVehicleTab('fines')">Traffic Fines</div>
+      </div>
+      <div id="vdTabContent"></div>
+    </div>
+
+    <!-- USER MANAGEMENT -->
+    <div id="viewUsers" style="display:none">
+      <div class="back-btn no-print"><button class="btn btn-outline btn-sm" onclick="goHome()">← Home</button></div>
+      <h2 style="color:#1a3a5c;font-size:18px;margin-bottom:16px">User Management</h2>
+      <div class="card">
+        <div class="card-title">Add New User</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <div class="field" style="flex:1;min-width:160px"><label>Full Name</label><input type="text" id="nuName"></div>
+          <div class="field" style="flex:1;min-width:160px"><label>Email</label><input type="email" id="nuEmail"></div>
+          <div class="field" style="flex:1;min-width:140px"><label>Password</label><input type="password" id="nuPwd"></div>
+          <div class="field" style="flex:1;min-width:140px"><label>Role</label>
+            <select id="nuRole">
+              <option value="driver">Driver</option>
+              <option value="dispatcher">Dispatcher</option>
+              <option value="admin">Administrator</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label><input type="checkbox" id="nuVehicleManager" style="width:auto;margin-right:6px">Designate as Vehicle Manager (replaces current designation)</label></div>
+        <button class="btn btn-primary btn-sm" onclick="createUser()">Add User</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Users</div>
+        <div id="userList"></div>
+      </div>
+    </div>
+
+    <!-- DRIVER VIEW — My Tickets -->
+    <div id="viewMyTickets" style="display:none">
+      <h2 style="color:#1a3a5c;font-size:18px;margin-bottom:14px">My Assigned Tickets</h2>
+      <div id="myTicketList"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODALS -->
+
+<!-- New / Edit Ticket -->
+<div id="ticketModal" class="modal-bg">
+  <div class="modal">
+    <div class="modal-title" id="ticketModalTitle">New Action Ticket</div>
+    <div class="field"><label>Action Type *</label>
+      <select id="tmType">
+        <option value="delivery">Delivery</option>
+        <option value="collection">Collection</option>
+        <option value="task">Task</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="field"><label>Description *</label><textarea id="tmDesc" placeholder="What needs to be done?"></textarea></div>
+    <div class="field"><label>Location / Address *</label><input type="text" id="tmLocation" placeholder="Delivery or pickup address"></div>
+    <div style="display:flex;gap:10px">
+      <div class="field" style="flex:1"><label>Due Date *</label><input type="date" id="tmDueDate"></div>
+      <div class="field" style="flex:1"><label>Due Time (optional)</label><input type="time" id="tmDueTime"></div>
+    </div>
+    <div class="field"><label>Driver Instructions / Notes</label><textarea id="tmNotes" placeholder="Loading requirements, documents to collect, access codes, special instructions..."></textarea></div>
+    <input type="hidden" id="tmId">
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-primary" onclick="saveTicket()">Save Ticket</button>
+      <button class="btn btn-outline" onclick="closeModal('ticketModal')">Cancel</button>
+      <button class="btn btn-danger btn-sm" id="tmDeleteBtn" style="margin-left:auto;display:none" onclick="deleteTicket()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ticket Detail -->
+<div id="ticketDetailModal" class="modal-bg">
+  <div class="modal" style="max-width:620px">
+    <div id="tdContent"></div>
+    <div id="tdActions" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px"></div>
+  </div>
+</div>
+
+<!-- Assign Ticket -->
+<div id="assignModal" class="modal-bg">
+  <div class="modal">
+    <div class="modal-title">Assign Ticket</div>
+    <div id="assignTicketInfo" style="background:#f8fafc;border-radius:8px;padding:10px;font-size:13px;margin-bottom:14px"></div>
+    <div class="field"><label>Select Driver *</label>
+      <select id="assignDriverSelect" onchange="loadDriverDaySchedule()">
+        <option value="">— Choose a driver —</option>
+      </select>
+    </div>
+    <div id="driverDaySchedule" style="display:none;background:#fff8e1;border-radius:8px;padding:10px;font-size:12px;margin-bottom:12px"></div>
+    <div style="display:flex;gap:10px">
+      <div class="field" style="flex:1"><label>Assigned Date *</label><input type="date" id="assignDate" onchange="loadDriverDaySchedule()"></div>
+      <div class="field" style="flex:1"><label>Assigned Time (optional)</label><input type="time" id="assignTime"></div>
+    </div>
+    <div id="assignConflictWarn" style="display:none;background:#fde8e8;border-radius:8px;padding:10px;font-size:13px;color:#C0392B;margin-bottom:12px"></div>
+    <input type="hidden" id="assignTicketId">
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" onclick="doAssign()">Assign Driver</button>
+      <button class="btn btn-outline" onclick="closeModal('assignModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Complete Ticket -->
+<div id="completeModal" class="modal-bg">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-title">Mark Ticket Complete</div>
+    <div id="completeTicketInfo" style="font-size:13px;color:#555;margin-bottom:12px"></div>
+    <div class="field"><label>Completion Notes (optional)</label><textarea id="completeNotes" placeholder="Any notes about the completed task..."></textarea></div>
+    <input type="hidden" id="completeTicketId">
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-success" onclick="doComplete()">✓ Mark Complete</button>
+      <button class="btn btn-outline" onclick="closeModal('completeModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Vehicle Modal -->
+<div id="vehicleModal" class="modal-bg">
+  <div class="modal">
+    <div class="modal-title" id="vmTitle">Add Vehicle</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div class="field" style="flex:1;min-width:140px"><label>Registration *</label><input type="text" id="vmReg" placeholder="e.g. CA 123-456"></div>
+      <div class="field" style="flex:1;min-width:140px"><label>Make *</label><input type="text" id="vmMake" placeholder="e.g. Toyota"></div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div class="field" style="flex:1;min-width:140px"><label>Model *</label><input type="text" id="vmModel" placeholder="e.g. Hilux"></div>
+      <div class="field" style="flex:1;min-width:80px"><label>Year</label><input type="number" id="vmYear" placeholder="2022"></div>
+      <div class="field" style="flex:1;min-width:100px"><label>Colour</label><input type="text" id="vmColour"></div>
+    </div>
+    <div class="field"><label>Notes</label><textarea id="vmNotes" style="min-height:60px"></textarea></div>
+    <input type="hidden" id="vmId">
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" onclick="saveVehicle()">Save Vehicle</button>
+      <button class="btn btn-outline" onclick="closeModal('vehicleModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Generic sub-record modal -->
+<div id="subModal" class="modal-bg">
+  <div class="modal"><div id="subModalContent"></div></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══ STATE ═══════════════════════════════════════════════════════════════════
+let token = localStorage.getItem('dms_token');
+let currentUser = null;
+let currentVehicleId = null;
+let currentVehicleTab = 'service';
+let calWeekStart = mondayOfWeek(new Date());
+
+// ═══ HELPERS ═════════════════════════════════════════════════════════════════
+const BASE = '';
+async function api(path, opts = {}) {
+  opts.headers = { ...(opts.headers || {}), 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token };
+  return fetch(BASE + path, opts);
+}
+function fmt(d) { if (!d) return '—'; const dt = new Date(d + 'T00:00:00'); return dt.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' }); }
+function fmtTime(t) { if (!t) return ''; return t.slice(0,5); }
+function fmtDuration(mins) { if (!mins) return '—'; const h = Math.floor(mins/60), m = mins%60; return h ? `${h}h ${m}m` : `${m}m`; }
+function toast(msg, dur=3000) { const el = document.getElementById('toast'); el.textContent = msg; el.style.display='block'; setTimeout(()=>el.style.display='none', dur); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function showView(id) {
+  ['viewDashboard','viewTickets','viewCalendar','viewReports','viewVehicles','viewVehicleDetail','viewUsers','viewMyTickets'].forEach(v=>{
+    const el=document.getElementById(v); if(el) el.style.display='none';
+  });
+  document.getElementById(id).style.display='block';
+}
+function mondayOfWeek(d) {
+  const dt = new Date(d); const day = dt.getDay(); const diff = (day === 0 ? -6 : 1 - day);
+  dt.setDate(dt.getDate() + diff); dt.setHours(0,0,0,0); return dt;
+}
+function addDays(d, n) { const dt = new Date(d); dt.setDate(dt.getDate()+n); return dt; }
+function isoDate(d) { return d.toISOString().slice(0,10); }
+function statusBadge(status) {
+  const map = { unassigned:'badge-amber', assigned:'badge-blue', completed:'badge-green', overdue:'badge-red' };
+  return `<span class="badge ${map[status]||'badge-grey'}">${status.charAt(0).toUpperCase()+status.slice(1)}</span>`;
+}
+function actionBadge(type) {
+  const icons = { delivery:'🚚', collection:'📦', task:'🔧', other:'📋' };
+  return `${icons[type]||'📋'} ${type.charAt(0).toUpperCase()+type.slice(1)}`;
+}
+
+// ═══ AUTH ═════════════════════════════════════════════════════════════════════
+function showBootstrap() { document.getElementById('loginForm').style.display='none'; document.getElementById('bootstrapForm').style.display='block'; document.getElementById('loginSubText').textContent='Create admin account'; }
+function showLoginForm() { document.getElementById('bootstrapForm').style.display='none'; document.getElementById('loginForm').style.display='block'; document.getElementById('loginSubText').textContent='Sign in to continue'; }
+
+async function doBootstrap() {
+  const name=document.getElementById('bsName').value.trim(), email=document.getElementById('bsEmail').value.trim(), password=document.getElementById('bsPwd').value;
+  const errEl=document.getElementById('bsErr'); errEl.style.display='none';
+  if (!name||!email||!password){errEl.textContent='All fields required';errEl.style.display='block';return;}
+  const res=await fetch('/api/auth/bootstrap',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password})});
+  if (!res.ok){const d=await res.json();errEl.textContent=d.detail||'Error';errEl.style.display='block';return;}
+  toast('✓ Admin created — please sign in');
+  document.getElementById('loginEmail').value=email; showLoginForm();
+}
+
+async function doLogin() {
+  const email=document.getElementById('loginEmail').value.trim(), password=document.getElementById('loginPwd').value;
+  const errEl=document.getElementById('loginErr'); errEl.style.display='none';
+  const res=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+  if (!res.ok){errEl.textContent='Invalid email or password';errEl.style.display='block';return;}
+  const data=await res.json(); token=data.token; localStorage.setItem('dms_token',token);
+  currentUser={id:data.id,name:data.name,role:data.role,is_vehicle_manager:data.is_vehicle_manager};
+  document.getElementById('topbarUser').textContent=data.name;
+  document.getElementById('loginScreen').classList.remove('active');
+  document.getElementById('appScreen').classList.add('active');
+  goHome();
+}
+
+function doLogout() {
+  token=null; localStorage.removeItem('dms_token');
+  document.getElementById('appScreen').classList.remove('active');
+  document.getElementById('loginScreen').classList.add('active');
+}
+
+async function checkAuth() {
+  if (!token) return;
+  const res=await api('/api/auth/me');
+  if (!res.ok){doLogout();return;}
+  const data=await res.json(); currentUser=data;
+  document.getElementById('topbarUser').textContent=data.name;
+  document.getElementById('loginScreen').classList.remove('active');
+  document.getElementById('appScreen').classList.add('active');
+  goHome();
+}
+
+// ═══ DASHBOARD ═══════════════════════════════════════════════════════════════
+async function goHome() {
+  showView('viewDashboard');
+  document.getElementById('topbarTitle').textContent='🚚 Driver Management System';
+
+  // Stats
+  const res = await api('/api/tickets/?');
+  const tickets = res.ok ? await res.json() : [];
+  const active = tickets.filter(t=>t.status==='assigned').length;
+  const overdue = tickets.filter(t=>t.status==='overdue').length;
+  const unassigned = tickets.filter(t=>t.status==='unassigned').length;
+
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-box"><div class="stat-val">${unassigned}</div><div class="stat-lbl">Unassigned</div></div>
+    <div class="stat-box"><div class="stat-val">${active}</div><div class="stat-lbl">Active</div></div>
+    <div class="stat-box ${overdue>0?'alert':''}"><div class="stat-val">${overdue}</div><div class="stat-lbl">Overdue</div></div>
+    <div class="stat-box"><div class="stat-val">${tickets.filter(t=>t.status==='completed').length}</div><div class="stat-lbl">Completed</div></div>
+  `;
+
+  // Fleet alerts (vehicle access only)
+  const canVehicle = currentUser.role==='admin' || (currentUser.role==='driver' && currentUser.is_vehicle_manager);
+  if (canVehicle) {
+    const ar = await api('/api/vehicles/alerts/overdue');
+    const alerts = ar.ok ? await ar.json() : [];
+    document.getElementById('fleetAlerts').innerHTML = alerts.length
+      ? alerts.map(a=>`<div class="fleet-alert">⚠ Vehicle ${a.vehicle_id} — <strong>${a.maintenance_type.replace('_',' ')}</strong> overdue since ${fmt(a.due_date)}${a.description?' · '+a.description:''}</div>`).join('')
+      : '';
+  } else {
+    document.getElementById('fleetAlerts').innerHTML = '';
+  }
+
+  // Dashboard buttons based on role
+  const isDriver = currentUser.role==='driver';
+  const isDispatcherOrAdmin = currentUser.role==='admin' || currentUser.role==='dispatcher';
+  let buttons = [];
+
+  if (isDriver) {
+    buttons = [
+      {icon:'📋',label:'My Tickets',sub:'View your assignments',fn:'openMyTickets()'},
+    ];
+  }
+  if (isDispatcherOrAdmin) {
+    buttons = [
+      {icon:'📋',label:'Active Tickets',sub:'View & manage all tickets',fn:'openTickets()'},
+      {icon:'➕',label:'New Ticket',sub:'Create an action ticket',fn:'openNewTicketModal()'},
+      {icon:'📅',label:'Driver Calendar',sub:'Schedule & availability',fn:'openCalendar()'},
+      {icon:'📄',label:'Schedule Report',sub:'Print driver assignments',fn:'openReports()'},
+    ];
+  }
+  if (currentUser.role==='admin') {
+    buttons.push({icon:'👥',label:'Manage Users',sub:'Add & manage users',fn:'openUsers()'});
+  }
+  if (canVehicle) {
+    buttons.push({icon:'🚗',label:'Fleet Management',sub:'Vehicles, maintenance & fines',fn:'openVehicles()'});
+  }
+
+  document.getElementById('dashGrid').innerHTML = buttons.map(b=>`
+    <div class="dash-btn" onclick="${b.fn}">
+      <div class="dash-btn-icon">${b.icon}</div>
+      <div class="dash-btn-label">${b.label}</div>
+      <div class="dash-btn-sub">${b.sub}</div>
+    </div>`).join('');
+}
+
+// ═══ TICKETS ═════════════════════════════════════════════════════════════════
+function openTickets() { showView('viewTickets'); document.getElementById('topbarTitle').textContent='Action Tickets'; const isDispOrAdmin=currentUser.role==='admin'||currentUser.role==='dispatcher'; document.getElementById('newTicketBtn').style.display=isDispOrAdmin?'inline-block':'none'; loadTickets(); }
+
+async function loadTickets() {
+  const status = document.getElementById('ticketFilterStatus').value;
+  const res = await api('/api/tickets/' + (status ? '?status=' + status : ''));
+  const tickets = await res.json();
+  const el = document.getElementById('ticketList');
+  if (!tickets.length) { el.innerHTML='<div style="color:#888;text-align:center;padding:30px">No tickets found.</div>'; return; }
+  el.innerHTML = tickets.map(t=>`
+    <div class="ticket-card ${t.status}" onclick="openTicketDetail(${t.id})">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div>
+          <div class="ticket-num">${t.ticket_number}</div>
+          <div class="ticket-title">${actionBadge(t.action_type)} · ${t.description.slice(0,80)}${t.description.length>80?'…':''}</div>
+          <div class="ticket-meta">📍 ${t.location} · Due: ${fmt(t.due_date)}${t.due_time?' '+fmtTime(t.due_time):''}${t.assignment?' · 👤 '+t.assignment.driver_name:''}</div>
+        </div>
+        ${statusBadge(t.status)}
+      </div>
+    </div>`).join('');
+}
+
+function openNewTicketModal() {
+  document.getElementById('ticketModalTitle').textContent='New Action Ticket';
+  document.getElementById('tmId').value='';
+  document.getElementById('tmType').value='delivery';
+  ['tmDesc','tmLocation','tmNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('tmDueDate').value=new Date().toISOString().slice(0,10);
+  document.getElementById('tmDueTime').value='';
+  document.getElementById('tmDeleteBtn').style.display='none';
+  openModal('ticketModal');
+}
+
+async function openTicketDetail(id) {
+  const res = await api('/api/tickets/' + id);
+  const t = await res.json();
+  const isDispOrAdmin = currentUser.role==='admin' || currentUser.role==='dispatcher';
+  const isDriver = currentUser.role==='driver';
+
+  let html = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+      <div><div style="font-size:12px;color:#888;font-weight:700">${t.ticket_number}</div>
+      <div style="font-size:18px;font-weight:700;color:#1a3a5c;margin:4px 0">${actionBadge(t.action_type)}</div></div>
+      ${statusBadge(t.status)}
+    </div>
+    <table style="margin-bottom:14px">
+      <tr><td style="color:#888;font-size:12px;padding:4px 8px 4px 0;white-space:nowrap">Description</td><td style="font-size:13px;padding:4px 0">${t.description}</td></tr>
+      <tr><td style="color:#888;font-size:12px;padding:4px 8px 4px 0">Location</td><td style="font-size:13px;padding:4px 0">📍 ${t.location}</td></tr>
+      <tr><td style="color:#888;font-size:12px;padding:4px 8px 4px 0">Due</td><td style="font-size:13px;padding:4px 0">${fmt(t.due_date)}${t.due_time?' at '+fmtTime(t.due_time):''}</td></tr>
+      ${t.notes?`<tr><td style="color:#888;font-size:12px;padding:4px 8px 4px 0;vertical-align:top">Instructions</td><td style="font-size:13px;padding:4px 0">${t.notes}</td></tr>`:''}
+      <tr><td style="color:#888;font-size:12px;padding:4px 8px 4px 0">Created by</td><td style="font-size:13px;padding:4px 0">${t.created_by} · ${new Date(t.created_at).toLocaleDateString('en-ZA')}</td></tr>
+    </table>`;
+
+  if (t.assignment) {
+    const a = t.assignment;
+    html += `<div style="background:#f0f4f8;border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px">
+      <div style="font-weight:700;color:#1a3a5c;margin-bottom:6px">Assignment</div>
+      <div>Driver: <strong>${a.driver_name}</strong></div>
+      <div>Date: ${fmt(a.assigned_date)}${a.assigned_time?' at '+fmtTime(a.assigned_time):''}</div>
+      <div>Assigned by: ${a.assigned_by} · ${new Date(a.assigned_at).toLocaleDateString('en-ZA')}</div>
+      ${a.completed_at?`<div style="color:#27AE60;margin-top:4px">✓ Completed: ${new Date(a.completed_at).toLocaleString('en-ZA')} · Duration: ${fmtDuration(a.duration_minutes)}</div>`:''}
+      ${a.completion_notes?`<div style="margin-top:4px;color:#555">${a.completion_notes}</div>`:''}
+    </div>`;
+  }
+
+  document.getElementById('tdContent').innerHTML = html;
+
+  const actions = [];
+  if (isDispOrAdmin && t.status!=='completed') {
+    actions.push(`<button class="btn btn-outline btn-sm" onclick="openEditTicket(${t.id})">✏ Edit</button>`);
+    actions.push(`<button class="btn btn-primary btn-sm" onclick="closeModal('ticketDetailModal');openAssignModal(${t.id})">👤 ${t.assignment?'Reassign':'Assign'} Driver</button>`);
+  }
+  if ((isDispOrAdmin || isDriver) && (t.status==='assigned'||t.status==='overdue')) {
+    actions.push(`<button class="btn btn-success btn-sm" onclick="closeModal('ticketDetailModal');openCompleteModal(${t.id})">✓ Mark Complete</button>`);
+  }
+  actions.push(`<button class="btn btn-sm" onclick="printTicket(${t.id})" style="background:#eee;color:#333">🖨 Print / PDF</button>`);
+  actions.push(`<button class="btn btn-outline btn-sm" onclick="closeModal('ticketDetailModal')">Close</button>`);
+  document.getElementById('tdActions').innerHTML = actions.join('');
+  openModal('ticketDetailModal');
+}
+
+async function openEditTicket(id) {
+  closeModal('ticketDetailModal');
+  const res = await api('/api/tickets/' + id);
+  const t = await res.json();
+  document.getElementById('ticketModalTitle').textContent = 'Edit Ticket';
+  document.getElementById('tmId').value = t.id;
+  document.getElementById('tmType').value = t.action_type;
+  document.getElementById('tmDesc').value = t.description;
+  document.getElementById('tmLocation').value = t.location;
+  document.getElementById('tmDueDate').value = t.due_date;
+  document.getElementById('tmDueTime').value = t.due_time ? fmtTime(t.due_time) : '';
+  document.getElementById('tmNotes').value = t.notes || '';
+  document.getElementById('tmDeleteBtn').style.display = t.status==='unassigned' ? 'inline-block' : 'none';
+  openModal('ticketModal');
+}
+
+async function saveTicket() {
+  const id = document.getElementById('tmId').value;
+  const payload = {
+    action_type: document.getElementById('tmType').value,
+    description: document.getElementById('tmDesc').value.trim(),
+    location: document.getElementById('tmLocation').value.trim(),
+    due_date: document.getElementById('tmDueDate').value,
+    due_time: document.getElementById('tmDueTime').value || null,
+    notes: document.getElementById('tmNotes').value.trim() || null,
+  };
+  if (!payload.description || !payload.location || !payload.due_date) { toast('Description, location and due date are required'); return; }
+  const url = id ? `/api/tickets/${id}` : '/api/tickets/';
+  const method = id ? 'PATCH' : 'POST';
+  const res = await api(url, { method, body: JSON.stringify(payload) });
+  if (!res.ok) { const e=await res.json(); toast(e.detail||'Error'); return; }
+  const t = await res.json();
+  closeModal('ticketModal');
+  toast(`✓ Ticket ${t.ticket_number} saved`);
+  loadTickets();
+}
+
+async function deleteTicket() {
+  if (!confirm('Delete this ticket? Cannot be undone.')) return;
+  const id = document.getElementById('tmId').value;
+  await api(`/api/tickets/${id}`, { method: 'DELETE' });
+  closeModal('ticketModal');
+  toast('Ticket deleted');
+  loadTickets();
+}
+
+// ═══ ASSIGN ══════════════════════════════════════════════════════════════════
+let allDrivers = [];
+async function openAssignModal(ticketId) {
+  const res = await api('/api/tickets/' + ticketId);
+  const t = await res.json();
+  document.getElementById('assignTicketId').value = ticketId;
+  document.getElementById('assignTicketInfo').innerHTML = `<strong>${t.ticket_number}</strong> · ${actionBadge(t.action_type)}<br>📍 ${t.location} · Due: ${fmt(t.due_date)}`;
+  document.getElementById('assignDate').value = t.due_date;
+  document.getElementById('assignTime').value = t.due_time ? fmtTime(t.due_time) : '';
+  document.getElementById('driverDaySchedule').style.display = 'none';
+  document.getElementById('assignConflictWarn').style.display = 'none';
+
+  const dRes = await api('/api/auth/users');
+  allDrivers = (await dRes.json()).filter(u => u.role==='driver' && u.is_active);
+  const sel = document.getElementById('assignDriverSelect');
+  sel.innerHTML = '<option value="">— Choose a driver —</option>' + allDrivers.map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
+  if (t.assignment) sel.value = t.assignment.driver_id;
+
+  openModal('assignModal');
+  loadDriverDaySchedule();
+}
+
+async function loadDriverDaySchedule() {
+  const driverId = document.getElementById('assignDriverSelect').value;
+  const assignDate = document.getElementById('assignDate').value;
+  const schedEl = document.getElementById('driverDaySchedule');
+  const warnEl = document.getElementById('assignConflictWarn');
+  warnEl.style.display = 'none';
+  if (!driverId || !assignDate) { schedEl.style.display='none'; return; }
+
+  const weekStart = isoDate(mondayOfWeek(new Date(assignDate + 'T00:00:00')));
+  const res = await api(`/api/tickets/calendar/week?week_start=${weekStart}`);
+  const cal = await res.json();
+  const driverCal = cal.find(d => d.driver_id == driverId);
+  const dayTickets = driverCal ? (driverCal.days[assignDate] || []) : [];
+
+  if (dayTickets.length > 0) {
+    schedEl.style.display = 'block';
+    schedEl.innerHTML = `<strong>⚠ ${allDrivers.find(d=>d.id==driverId)?.name} already has ${dayTickets.length} ticket(s) on this date:</strong><br>` +
+      dayTickets.map(t=>`• ${t.ticket_number} · ${t.description.slice(0,50)} (${t.status})`).join('<br>');
+    warnEl.style.display = 'block';
+    warnEl.textContent = `${dayTickets.length} existing ticket(s) on this date. You can still assign — conflicts are allowed.`;
+  } else {
+    schedEl.style.display = 'block';
+    schedEl.innerHTML = `✓ ${allDrivers.find(d=>d.id==driverId)?.name} is free on this date.`;
+  }
+}
+
+async function doAssign() {
+  const ticketId = document.getElementById('assignTicketId').value;
+  const driverId = document.getElementById('assignDriverSelect').value;
+  const assignDate = document.getElementById('assignDate').value;
+  const assignTime = document.getElementById('assignTime').value || null;
+  if (!driverId || !assignDate) { toast('Please select a driver and date'); return; }
+  const res = await api(`/api/tickets/${ticketId}/assign`, {
+    method: 'POST', body: JSON.stringify({ driver_id: parseInt(driverId), assigned_date: assignDate, assigned_time: assignTime })
+  });
+  if (!res.ok) { const e=await res.json(); toast(e.detail||'Error'); return; }
+  closeModal('assignModal');
+  toast('✓ Ticket assigned');
+  loadTickets();
+}
+
+// ═══ COMPLETE ════════════════════════════════════════════════════════════════
+async function openCompleteModal(ticketId) {
+  const res = await api('/api/tickets/' + ticketId);
+  const t = await res.json();
+  document.getElementById('completeTicketId').value = ticketId;
+  document.getElementById('completeTicketInfo').innerHTML = `<strong>${t.ticket_number}</strong> · ${t.description}<br>📍 ${t.location}`;
+  document.getElementById('completeNotes').value = '';
+  openModal('completeModal');
+}
+
+async function doComplete() {
+  const id = document.getElementById('completeTicketId').value;
+  const notes = document.getElementById('completeNotes').value.trim() || null;
+  const res = await api(`/api/tickets/${id}/complete`, { method:'POST', body: JSON.stringify({ completion_notes: notes }) });
+  if (!res.ok) { const e=await res.json(); toast(e.detail||'Error'); return; }
+  closeModal('completeModal');
+  toast('✓ Ticket marked complete');
+  if (currentUser.role==='driver') loadMyTickets(); else loadTickets();
+}
+
+// ═══ PRINT TICKET ════════════════════════════════════════════════════════════
+async function printTicket(id) {
+  const res = await api('/api/tickets/' + id);
+  const t = await res.json();
+  const win = window.open('', '_blank');
+  const a = t.assignment;
+  win.document.write(`<!DOCTYPE html><html><head><title>Ticket ${t.ticket_number}</title>
+  <style>body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;color:#222}
+  h1{color:#1a3a5c;font-size:20px;margin-bottom:4px}.num{font-size:13px;color:#888;font-weight:700}
+  table{width:100%;border-collapse:collapse;margin:16px 0}
+  td{padding:8px 12px;border:1px solid #ddd;font-size:14px}
+  td:first-child{background:#f0f4f8;font-weight:700;width:160px;color:#555}
+  .footer{margin-top:40px;font-size:12px;color:#aaa;border-top:1px solid #eee;padding-top:12px}
+  .sig-box{border:1px solid #ddd;height:60px;margin-top:8px;border-radius:4px}
+  @media print{button{display:none}}</style></head><body>
+  <div class="num">${t.ticket_number}</div>
+  <h1>${t.action_type.charAt(0).toUpperCase()+t.action_type.slice(1)} Action Ticket</h1>
+  <table>
+    <tr><td>Description</td><td>${t.description}</td></tr>
+    <tr><td>Location / Address</td><td>${t.location}</td></tr>
+    <tr><td>Due Date</td><td>${t.due_date}${t.due_time?' at '+fmtTime(t.due_time):''}</td></tr>
+    ${t.notes?`<tr><td>Driver Instructions</td><td>${t.notes}</td></tr>`:''}
+    <tr><td>Status</td><td>${t.status.toUpperCase()}</td></tr>
+    ${a?`<tr><td>Assigned To</td><td>${a.driver_name}</td></tr>
+    <tr><td>Assigned Date</td><td>${a.assigned_date}${a.assigned_time?' at '+fmtTime(a.assigned_time):''}</td></tr>`:''}
+    ${a&&a.completed_at?`<tr><td>Completed</td><td>${new Date(a.completed_at).toLocaleString('en-ZA')} · Duration: ${fmtDuration(a.duration_minutes)}</td></tr>`:''}
+  </table>
+  <div style="margin-top:24px"><strong>Driver Signature:</strong><div class="sig-box"></div></div>
+  <div class="footer">Printed: ${new Date().toLocaleString('en-ZA')} · Driver Management System</div>
+  <br><button onclick="window.print()">🖨 Print / Save as PDF</button>
+  </body></html>`);
+  win.document.close();
+}
+
+// ═══ CALENDAR ════════════════════════════════════════════════════════════════
+function openCalendar() { showView('viewCalendar'); document.getElementById('topbarTitle').textContent='Driver Calendar'; calWeekStart=mondayOfWeek(new Date()); renderCalendar(); }
+
+async function renderCalendar() {
+  const ws = calWeekStart;
+  const days = [0,1,2,3,4,5,6].map(i=>addDays(ws,i));
+  document.getElementById('calWeekLabel').textContent = `${days[0].toLocaleDateString('en-ZA',{day:'2-digit',month:'short'})} – ${days[6].toLocaleDateString('en-ZA',{day:'2-digit',month:'short',year:'numeric'})}`;
+
+  const res = await api(`/api/tickets/calendar/week?week_start=${isoDate(ws)}`);
+  const cal = await res.json();
+
+  const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const cols = 1 + 7;
+  let grid = `<div class="cal-grid" style="grid-template-columns:140px repeat(7,1fr)">`;
+  grid += `<div class="cal-header">Driver</div>`;
+  days.forEach((d,i)=>{ grid+=`<div class="cal-header">${dayLabels[i]}<br>${d.toLocaleDateString('en-ZA',{day:'2-digit',month:'short'})}</div>`; });
+
+  cal.forEach(driver=>{
+    grid += `<div class="cal-driver">${driver.driver_name}</div>`;
+    days.forEach(d=>{
+      const key = isoDate(d);
+      const dayTickets = driver.days[key] || [];
+      grid += `<div class="cal-cell" onclick="calCellClick(${driver.driver_id},'${key}')">`;
+      dayTickets.forEach(t=>{
+        grid += `<div class="cal-chip ${t.status}" title="${t.ticket_number}: ${t.description}">${t.ticket_number}</div>`;
+      });
+      grid += `</div>`;
+    });
+  });
+
+  if (!cal.length) grid += `<div style="grid-column:1/-1;text-align:center;padding:30px;color:#888">No drivers found. Add drivers in User Management.</div>`;
+  grid += `</div>`;
+  document.getElementById('calendarGrid').innerHTML = grid;
+}
+
+async function calCellClick(driverId, dateStr) {
+  const res = await api(`/api/tickets/calendar/week?week_start=${isoDate(mondayOfWeek(new Date(dateStr+'T00:00:00')))}`);
+  const cal = await res.json();
+  const driverCal = cal.find(d=>d.driver_id===driverId);
+  const tickets = driverCal ? (driverCal.days[dateStr]||[]) : [];
+  const driverName = driverCal ? driverCal.driver_name : 'Driver';
+  let html = `<div class="modal-title">${driverName} — ${fmt(dateStr)}</div>`;
+  if (!tickets.length) { html += `<div style="color:#888;font-size:13px">No tickets assigned on this date.</div>`; }
+  else { html += tickets.map(t=>`<div style="background:#f8fafc;border-radius:6px;padding:8px 10px;margin-bottom:6px;font-size:13px"><strong>${t.ticket_number}</strong> · ${actionBadge(t.action_type)}<br>📍 ${t.location}${t.assigned_time?' · ⏰ '+fmtTime(t.assigned_time):''}<br>${statusBadge(t.status)}</div>`).join(''); }
+  html += `<div style="margin-top:14px"><button class="btn btn-outline btn-sm" onclick="closeModal('subModal')">Close</button></div>`;
+  document.getElementById('subModalContent').innerHTML = html;
+  openModal('subModal');
+}
+
+function calNavWeek(dir) { calWeekStart = addDays(calWeekStart, dir*7); renderCalendar(); }
+
+// ═══ REPORTS ═════════════════════════════════════════════════════════════════
+async function openReports() {
+  showView('viewReports');
+  document.getElementById('topbarTitle').textContent='Schedule Report';
+  const dRes = await api('/api/auth/users');
+  const drivers = (await dRes.json()).filter(u=>u.role==='driver'&&u.is_active);
+  const sel = document.getElementById('reportDriverSelect');
+  sel.innerHTML = '<option value="">— Select a driver —</option>' + drivers.map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('reportFrom').value = today;
+  const to = new Date(); to.setDate(to.getDate()+14);
+  document.getElementById('reportTo').value = to.toISOString().slice(0,10);
+  document.getElementById('reportContent').innerHTML = '';
+  document.getElementById('printReportBtn').style.display = 'none';
+}
+
+async function loadDriverReport() {
+  const driverId = document.getElementById('reportDriverSelect').value;
+  const from = document.getElementById('reportFrom').value;
+  const to = document.getElementById('reportTo').value;
+  if (!driverId) return;
+  const dRes = await api('/api/auth/users'); const users = await dRes.json();
+  const driver = users.find(u=>u.id==driverId);
+  const res = await api(`/api/tickets/?driver_id=${driverId}`);
+  const allTickets = await res.json();
+  const tickets = allTickets.filter(t=>{
+    if (!t.assignment) return false;
+    const d = t.assignment.assigned_date;
+    return (!from || d >= from) && (!to || d <= to);
+  }).sort((a,b)=>a.assignment.assigned_date.localeCompare(b.assignment.assigned_date));
+
+  const el = document.getElementById('reportContent');
+  if (!tickets.length) { el.innerHTML='<div style="color:#888;text-align:center;padding:30px">No assignments in this date range.</div>'; document.getElementById('printReportBtn').style.display='none'; return; }
+
+  el.innerHTML = `<div class="card" id="reportPrintArea">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+      <div><div style="font-size:18px;font-weight:700;color:#1a3a5c">Driver Assignment Schedule</div>
+      <div style="font-size:13px;color:#888">Driver: <strong>${driver?.name}</strong> · ${fmt(from)} to ${fmt(to)}</div></div>
+      <div style="font-size:12px;color:#aaa">Printed: ${new Date().toLocaleDateString('en-ZA')}</div>
+    </div>
+    <table>
+      <thead><tr><th>Ticket #</th><th>Date</th><th>Time</th><th>Type</th><th>Description</th><th>Location</th><th>Status</th></tr></thead>
+      <tbody>${tickets.map(t=>`<tr>
+        <td>${t.ticket_number}</td>
+        <td>${fmt(t.assignment.assigned_date)}</td>
+        <td>${t.assignment.assigned_time?fmtTime(t.assignment.assigned_time):'—'}</td>
+        <td>${actionBadge(t.action_type)}</td>
+        <td>${t.description}</td>
+        <td>${t.location}</td>
+        <td>${t.status}</td>
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>`;
+  document.getElementById('printReportBtn').style.display = 'inline-block';
+}
+
+function printReport() { window.print(); }
+
+// ═══ DRIVER VIEW ══════════════════════════════════════════════════════════════
+async function openMyTickets() {
+  showView('viewMyTickets');
+  document.getElementById('topbarTitle').textContent='My Tickets';
+  loadMyTickets();
+}
+
+async function loadMyTickets() {
+  const res = await api('/api/tickets/');
+  const tickets = await res.json();
+  const el = document.getElementById('myTicketList');
+  const active = tickets.filter(t=>t.status!=='completed');
+  const done = tickets.filter(t=>t.status==='completed');
+  if (!tickets.length) { el.innerHTML='<div style="color:#888;text-align:center;padding:30px">No tickets assigned to you.</div>'; return; }
+  const render = (list) => list.map(t=>`
+    <div class="ticket-card ${t.status}" onclick="openTicketDetail(${t.id})">
+      <div style="display:flex;justify-content:space-between;gap:8px">
+        <div>
+          <div class="ticket-num">${t.ticket_number}</div>
+          <div class="ticket-title">${actionBadge(t.action_type)} · ${t.description}</div>
+          <div class="ticket-meta">📍 ${t.location} · Due: ${fmt(t.due_date)}${t.assignment?.assigned_time?' at '+fmtTime(t.assignment.assigned_time):''}</div>
+        </div>
+        ${statusBadge(t.status)}
+      </div>
+      ${t.status!=='completed'?`<div style="margin-top:8px"><button class="btn btn-success btn-sm" onclick="event.stopPropagation();openCompleteModal(${t.id})">✓ Mark Complete</button></div>`:''}
+    </div>`).join('');
+  el.innerHTML = (active.length?'<div style="font-weight:700;color:#1a3a5c;margin-bottom:8px">Active</div>'+render(active):'') +
+    (done.length?'<hr style="margin:16px 0"><div style="font-weight:700;color:#888;margin-bottom:8px">Completed</div>'+render(done):'');
+}
+
+// ═══ VEHICLES ════════════════════════════════════════════════════════════════
+function openVehicles() { showView('viewVehicles'); document.getElementById('topbarTitle').textContent='Fleet Management'; loadVehicles(); }
+
+async function loadVehicles() {
+  const res = await api('/api/vehicles/');
+  const vehicles = await res.json();
+  const el = document.getElementById('vehicleList');
+  if (!vehicles.length) { el.innerHTML='<div class="card"><div style="color:#888;text-align:center;padding:20px">No vehicles yet. Click + Add Vehicle to get started.</div></div>'; return; }
+  const statusBadges = { active:'badge-green', in_maintenance:'badge-amber', retired:'badge-grey' };
+  el.innerHTML = vehicles.map(v=>`
+    <div class="card" style="cursor:pointer;margin-bottom:10px" onclick="openVehicleDetail(${v.id})">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-size:16px;font-weight:700;color:#1a3a5c">${v.registration}</div>
+          <div style="font-size:13px;color:#555">${v.make} ${v.model}${v.year?' · '+v.year:''}${v.colour?' · '+v.colour:''}</div>
+        </div>
+        <span class="badge ${statusBadges[v.status]||'badge-grey'}">${v.status.replace('_',' ')}</span>
+      </div>
+    </div>`).join('');
+}
+
+function openVehicleModal(id) {
+  document.getElementById('vmTitle').textContent = id ? 'Edit Vehicle' : 'Add Vehicle';
+  document.getElementById('vmId').value = id||'';
+  ['vmReg','vmMake','vmModel','vmYear','vmColour','vmNotes'].forEach(f=>document.getElementById(f).value='');
+  openModal('vehicleModal');
+}
+
+async function saveVehicle() {
+  const id = document.getElementById('vmId').value;
+  const payload = { registration:document.getElementById('vmReg').value.trim(), make:document.getElementById('vmMake').value.trim(), model:document.getElementById('vmModel').value.trim(), year:parseInt(document.getElementById('vmYear').value)||null, colour:document.getElementById('vmColour').value.trim()||null, notes:document.getElementById('vmNotes').value.trim()||null };
+  if (!payload.registration||!payload.make||!payload.model){toast('Registration, make and model are required');return;}
+  const url = id?`/api/vehicles/${id}`:'/api/vehicles/'; const method=id?'PATCH':'POST';
+  const res = await api(url,{method,body:JSON.stringify(payload)});
+  if (!res.ok){const e=await res.json();toast(e.detail||'Error');return;}
+  closeModal('vehicleModal'); toast('✓ Vehicle saved'); loadVehicles();
+}
+
+async function openVehicleDetail(id) {
+  currentVehicleId = id;
+  const res = await api('/api/vehicles/'+id);
+  const v = await res.json();
+  document.getElementById('vdTitle').textContent = `${v.registration} · ${v.make} ${v.model}${v.year?' ('+v.year+')':''}`;
+  showView('viewVehicleDetail');
+  document.getElementById('topbarTitle').textContent = v.registration;
+  switchVehicleTab('service');
+}
+
+function switchVehicleTab(tab) {
+  currentVehicleTab = tab;
+  document.querySelectorAll('#viewVehicleDetail .tab').forEach((el,i)=>{
+    el.classList.toggle('active', ['service','maintenance','fuel','incidents','fines'][i]===tab);
+  });
+  loadVehicleTab(tab);
+}
+
+async function loadVehicleTab(tab) {
+  const el = document.getElementById('vdTabContent');
+  if (tab==='service') await loadServiceTab(el);
+  else if (tab==='maintenance') await loadMaintenanceTab(el);
+  else if (tab==='fuel') await loadFuelTab(el);
+  else if (tab==='incidents') await loadIncidentsTab(el);
+  else if (tab==='fines') await loadFinesTab(el);
+}
+
+// Service
+async function loadServiceTab(el) {
+  const res = await api(`/api/vehicles/${currentVehicleId}/service`);
+  const records = await res.json();
+  el.innerHTML = `<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-primary btn-sm no-print" onclick="openSubModal('service')">+ Add Service Record</button></div>` +
+    (records.length ? `<table><thead><tr><th>Date</th><th>Odometer</th><th>Description</th><th>Workshop</th><th>Cost</th><th>Next Service</th><th></th></tr></thead><tbody>${records.map(r=>`<tr><td>${fmt(r.service_date)}</td><td>${r.odometer?r.odometer.toLocaleString()+' km':'—'}</td><td>${r.description}</td><td>${r.workshop||'—'}</td><td>${r.cost?'R '+parseFloat(r.cost).toFixed(2):'—'}</td><td>${r.next_service_date?fmt(r.next_service_date)+(r.next_service_km?' / '+r.next_service_km.toLocaleString()+' km':''):'—'}</td><td><button class="btn btn-danger btn-sm" onclick="deleteSubRecord('service',${r.id})">✕</button></td></tr>`).join('')}</tbody></table>`
+    : '<div style="color:#888;text-align:center;padding:20px">No service records yet.</div>');
+}
+
+// Maintenance
+async function loadMaintenanceTab(el) {
+  const res = await api(`/api/vehicles/${currentVehicleId}/maintenance`);
+  const items = await res.json();
+  const today = new Date().toISOString().slice(0,10);
+  el.innerHTML = `<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-primary btn-sm no-print" onclick="openSubModal('maintenance')">+ Schedule Maintenance</button></div>` +
+    (items.length ? `<table><thead><tr><th>Type</th><th>Description</th><th>Due Date</th><th>Due KM</th><th>Status</th><th></th></tr></thead><tbody>${items.map(m=>{
+      const overdue = !m.is_completed && m.due_date && m.due_date < today;
+      return `<tr ${overdue?'style="background:#fde8e8"':''}><td>${m.maintenance_type.replace('_',' ')}</td><td>${m.description||'—'}</td><td>${m.due_date?fmt(m.due_date)+(overdue?' ⚠':m.is_completed?' ✓':''):' —'}</td><td>${m.due_odometer?m.due_odometer.toLocaleString()+' km':'—'}</td><td>${m.is_completed?`<span class="badge badge-green">Done ${fmt(m.completed_date)}</span>`:`<span class="badge ${overdue?'badge-red':'badge-amber'}">Pending</span>`}</td><td>${!m.is_completed?`<button class="btn btn-success btn-sm" onclick="completeMaintenance(${m.id})">✓</button>`:''} <button class="btn btn-danger btn-sm" onclick="deleteSubRecord('maintenance',${m.id})">✕</button></td></tr>`;}).join('')}</tbody></table>`
+    : '<div style="color:#888;text-align:center;padding:20px">No scheduled maintenance.</div>');
+}
+
+// Fuel
+async function loadFuelTab(el) {
+  const res = await api(`/api/vehicles/${currentVehicleId}/fuel`);
+  const logs = await res.json();
+  const total = logs.reduce((s,f)=>s+(parseFloat(f.total_cost)||0),0);
+  el.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-size:13px;color:#555">Total cost: <strong>R ${total.toFixed(2)}</strong></div><button class="btn btn-primary btn-sm no-print" onclick="openSubModal('fuel')">+ Add Fuel Log</button></div>` +
+    (logs.length ? `<table><thead><tr><th>Date</th><th>Litres</th><th>R/Litre</th><th>Total</th><th>Odometer</th><th>Filled By</th><th></th></tr></thead><tbody>${logs.map(f=>`<tr><td>${fmt(f.date)}</td><td>${f.litres}L</td><td>${f.cost_per_litre?'R '+parseFloat(f.cost_per_litre).toFixed(3):'—'}</td><td>${f.total_cost?'R '+parseFloat(f.total_cost).toFixed(2):'—'}</td><td>${f.odometer?f.odometer.toLocaleString()+' km':'—'}</td><td>${f.filled_by||'—'}</td><td><button class="btn btn-danger btn-sm" onclick="deleteSubRecord('fuel',${f.id})">✕</button></td></tr>`).join('')}</tbody></table>`
+    : '<div style="color:#888;text-align:center;padding:20px">No fuel logs yet.</div>');
+}
+
+// Incidents
+async function loadIncidentsTab(el) {
+  const res = await api(`/api/vehicles/${currentVehicleId}/incidents`);
+  const items = await res.json();
+  el.innerHTML = `<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-primary btn-sm no-print" onclick="openSubModal('incidents')">+ Report Incident</button></div>` +
+    (items.length ? `<table><thead><tr><th>Date</th><th>Description</th><th>Reported By</th><th>Action Taken</th><th></th></tr></thead><tbody>${items.map(i=>`<tr><td>${fmt(i.date)}</td><td>${i.description}</td><td>${i.reported_by||'—'}</td><td>${i.action_taken||'—'}</td><td><button class="btn btn-danger btn-sm" onclick="deleteSubRecord('incidents',${i.id})">✕</button></td></tr>`).join('')}</tbody></table>`
+    : '<div style="color:#888;text-align:center;padding:20px">No incidents recorded.</div>');
+}
+
+// Fines
+async function loadFinesTab(el) {
+  const res = await api(`/api/vehicles/${currentVehicleId}/fines`);
+  const fines = await res.json();
+  const outstanding = fines.filter(f=>f.status==='outstanding').reduce((s,f)=>s+parseFloat(f.amount),0);
+  const statusBadges = { outstanding:'badge-red', paid:'badge-green', disputed:'badge-amber' };
+  el.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-size:13px;color:#E74C3C">Outstanding: <strong>R ${outstanding.toFixed(2)}</strong></div><button class="btn btn-primary btn-sm no-print" onclick="openSubModal('fines')">+ Record Fine</button></div>` +
+    (fines.length ? `<table><thead><tr><th>Date</th><th>Infringement</th><th>Location</th><th>Reference</th><th>Driver</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody>${fines.map(f=>`<tr><td>${fmt(f.date)}</td><td>${f.infringement}</td><td>${f.location||'—'}</td><td>${f.reference||'—'}</td><td>${f.driver_name||'—'}</td><td>R ${parseFloat(f.amount).toFixed(2)}</td><td><span class="badge ${statusBadges[f.status]}">${f.status}</span></td><td><select onchange="updateFineStatus(${f.id},this.value)" style="font-size:12px;border:1px solid #ddd;border-radius:4px;padding:2px"><option value="${f.status}" selected>Change...</option><option value="outstanding">Outstanding</option><option value="paid">Paid</option><option value="disputed">Disputed</option></select> <button class="btn btn-danger btn-sm" onclick="deleteSubRecord('fines',${f.id})">✕</button></td></tr>`).join('')}</tbody></table>`
+    : '<div style="color:#888;text-align:center;padding:20px">No fines recorded.</div>');
+}
+
+async function updateFineStatus(fineId, status) {
+  if (!status || status === 'Change...') return;
+  await api(`/api/vehicles/${currentVehicleId}/fines/${fineId}`, { method:'PATCH', body:JSON.stringify({status}) });
+  toast('✓ Fine status updated'); loadFuelTab; switchVehicleTab('fines');
+}
+
+async function completeMaintenance(itemId) {
+  const date = prompt('Completion date (YYYY-MM-DD):', new Date().toISOString().slice(0,10));
+  if (!date) return;
+  const km = prompt('Odometer at completion (km, leave blank if unknown):', '');
+  await api(`/api/vehicles/${currentVehicleId}/maintenance/${itemId}/complete`, { method:'PATCH', body:JSON.stringify({completed_date:date, completed_odometer:km?parseInt(km):null}) });
+  toast('✓ Maintenance completed'); switchVehicleTab('maintenance');
+}
+
+async function deleteSubRecord(type, id) {
+  if (!confirm('Delete this record?')) return;
+  await api(`/api/vehicles/${currentVehicleId}/${type}/${id}`, { method:'DELETE' });
+  toast('Deleted'); switchVehicleTab(currentVehicleTab);
+}
+
+// Sub-record forms
+function openSubModal(type) {
+  let html = '';
+  if (type==='service') {
+    html = `<div class="modal-title">Add Service Record</div>
+      <div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Service Date *</label><input type="date" id="sf_date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field" style="flex:1"><label>Odometer (km)</label><input type="number" id="sf_odo" placeholder="e.g. 45000"></div></div>
+      <div class="field"><label>Description *</label><textarea id="sf_desc" placeholder="What was serviced/repaired?"></textarea></div>
+      <div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Workshop</label><input type="text" id="sf_workshop"></div><div class="field" style="flex:1"><label>Cost (R)</label><input type="number" id="sf_cost" step="0.01"></div></div>
+      <div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Next Service Date</label><input type="date" id="sf_next_date"></div><div class="field" style="flex:1"><label>Next Service (km)</label><input type="number" id="sf_next_km"></div></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="submitSubModal('service')">Save</button><button class="btn btn-outline" onclick="closeModal('subModal')">Cancel</button></div>`;
+  } else if (type==='maintenance') {
+    html = `<div class="modal-title">Schedule Maintenance</div>
+      <div class="field"><label>Type *</label><select id="mf_type"><option value="oil_change">Oil Change</option><option value="tyres">Tyres</option><option value="roadworthy">Roadworthy</option><option value="full_service">Full Service</option><option value="other">Other</option></select></div>
+      <div class="field"><label>Description</label><input type="text" id="mf_desc" placeholder="e.g. Replace front tyres"></div>
+      <div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Due Date</label><input type="date" id="mf_due_date"></div><div class="field" style="flex:1"><label>Due Odometer (km)</label><input type="number" id="mf_due_km"></div></div>
+      <div class="field"><label>Notes</label><textarea id="mf_notes" style="min-height:60px"></textarea></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="submitSubModal('maintenance')">Save</button><button class="btn btn-outline" onclick="closeModal('subModal')">Cancel</button></div>`;
+  } else if (type==='fuel') {
+    html = `<div class="modal-title">Add Fuel Log</div>
+      <div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Date *</label><input type="date" id="ff_date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field" style="flex:1"><label>Litres *</label><input type="number" id="ff_litres" step="0.01" placeholder="e.g. 50.5"></div></div>
+      <div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Cost per Litre (R)</label><input type="number" id="ff_cpl" step="0.001"></div><div class="field" style="flex:1"><label>Total Cost (R)</label><input type="number" id="ff_total" step="0.01"></div></div>
+      <div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Odometer (km)</label><input type="number" id="ff_odo"></div><div class="field" style="flex:1"><label>Filled By</label><input type="text" id="ff_by"></div></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="submitSubModal('fuel')">Save</button><button class="btn btn-outline" onclick="closeModal('subModal')">Cancel</button></div>`;
+  } else if (type==='incidents') {
+    html = `<div class="modal-title">Report Incident</div>
+      <div class="field"><label>Date *</label><input type="date" id="if_date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="field"><label>Description *</label><textarea id="if_desc" placeholder="What happened?"></textarea></div>
+      <div class="field"><label>Reported By</label><input type="text" id="if_by"></div>
+      <div class="field"><label>Action Taken</label><textarea id="if_action" style="min-height:60px"></textarea></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="submitSubModal('incidents')">Save</button><button class="btn btn-outline" onclick="closeModal('subModal')">Cancel</button></div>`;
+  } else if (type==='fines') {
+    const dRes = api('/api/auth/users');
+    html = `<div class="modal-title">Record Traffic Fine</div>
+      <div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Date *</label><input type="date" id="fin_date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field" style="flex:1"><label>Amount (R) *</label><input type="number" id="fin_amount" step="0.01"></div></div>
+      <div class="field"><label>Infringement *</label><input type="text" id="fin_inf" placeholder="e.g. Speeding, No stopping"></div>
+      <div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Location</label><input type="text" id="fin_loc"></div><div class="field" style="flex:1"><label>Reference / Notice No.</label><input type="text" id="fin_ref"></div></div>
+      <div class="field"><label>Driver at fault</label><select id="fin_driver"><option value="">— Unknown / Not applicable —</option></select></div>
+      <div class="field"><label>Notes</label><textarea id="fin_notes" style="min-height:60px"></textarea></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="submitSubModal('fines')">Save</button><button class="btn btn-outline" onclick="closeModal('subModal')">Cancel</button></div>`;
+  }
+  document.getElementById('subModalContent').innerHTML = html;
+  openModal('subModal');
+  // Populate driver dropdown for fines
+  if (type==='fines') {
+    api('/api/auth/users').then(r=>r.json()).then(users=>{
+      const sel = document.getElementById('fin_driver');
+      if (sel) sel.innerHTML += users.filter(u=>u.role==='driver'&&u.is_active).map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+    });
+  }
+}
+
+async function submitSubModal(type) {
+  let payload = {}, url = `/api/vehicles/${currentVehicleId}/${type}`;
+  if (type==='service') {
+    payload = { service_date:document.getElementById('sf_date').value, odometer:parseInt(document.getElementById('sf_odo').value)||null, description:document.getElementById('sf_desc').value.trim(), workshop:document.getElementById('sf_workshop').value.trim()||null, cost:parseFloat(document.getElementById('sf_cost').value)||null, next_service_date:document.getElementById('sf_next_date').value||null, next_service_km:parseInt(document.getElementById('sf_next_km').value)||null };
+    if (!payload.description||!payload.service_date){toast('Date and description required');return;}
+  } else if (type==='maintenance') {
+    payload = { maintenance_type:document.getElementById('mf_type').value, description:document.getElementById('mf_desc').value.trim()||null, due_date:document.getElementById('mf_due_date').value||null, due_odometer:parseInt(document.getElementById('mf_due_km').value)||null, notes:document.getElementById('mf_notes').value.trim()||null };
+  } else if (type==='fuel') {
+    payload = { date:document.getElementById('ff_date').value, litres:parseFloat(document.getElementById('ff_litres').value), cost_per_litre:parseFloat(document.getElementById('ff_cpl').value)||null, total_cost:parseFloat(document.getElementById('ff_total').value)||null, odometer:parseInt(document.getElementById('ff_odo').value)||null, filled_by:document.getElementById('ff_by').value.trim()||null };
+    if (!payload.litres){toast('Litres required');return;}
+  } else if (type==='incidents') {
+    payload = { date:document.getElementById('if_date').value, description:document.getElementById('if_desc').value.trim(), reported_by:document.getElementById('if_by').value.trim()||null, action_taken:document.getElementById('if_action').value.trim()||null };
+    if (!payload.description){toast('Description required');return;}
+  } else if (type==='fines') {
+    payload = { date:document.getElementById('fin_date').value, amount:parseFloat(document.getElementById('fin_amount').value), infringement:document.getElementById('fin_inf').value.trim(), location:document.getElementById('fin_loc').value.trim()||null, reference:document.getElementById('fin_ref').value.trim()||null, driver_id:parseInt(document.getElementById('fin_driver').value)||null, notes:document.getElementById('fin_notes').value.trim()||null };
+    if (!payload.amount||!payload.infringement){toast('Amount and infringement required');return;}
+  }
+  const res = await api(url, { method:'POST', body:JSON.stringify(payload) });
+  if (!res.ok){const e=await res.json();toast(e.detail||'Error');return;}
+  closeModal('subModal'); toast('✓ Record saved'); switchVehicleTab(currentVehicleTab);
+}
+
+// ═══ USERS ═══════════════════════════════════════════════════════════════════
+function openUsers() { showView('viewUsers'); document.getElementById('topbarTitle').textContent='User Management'; loadUsers(); }
+
+async function loadUsers() {
+  const res = await api('/api/auth/users');
+  const users = await res.json();
+  const roleColors = { admin:'badge-blue', dispatcher:'badge-amber', driver:'badge-green' };
+  document.getElementById('userList').innerHTML = users.length
+    ? `<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Vehicle Manager</th><th>Status</th><th></th></tr></thead><tbody>${users.map(u=>`<tr>
+      <td><strong>${u.name}</strong></td><td>${u.email}</td>
+      <td><span class="badge ${roleColors[u.role]||'badge-grey'}">${u.role}</span></td>
+      <td>${u.is_vehicle_manager?'<span class="badge badge-blue">✓ Yes</span>':'—'}</td>
+      <td>${u.is_active?'<span class="badge badge-green">Active</span>':'<span class="badge badge-grey">Inactive</span>'}</td>
+      <td>${u.is_active?`<button class="btn btn-grey btn-sm" onclick="deactivateUser(${u.id})">Deactivate</button>`:''}</td>
+    </tr>`).join('')}</tbody></table>`
+    : '<div style="color:#888;text-align:center;padding:20px">No users yet.</div>';
+}
+
+async function createUser() {
+  const payload = { name:document.getElementById('nuName').value.trim(), email:document.getElementById('nuEmail').value.trim(), password:document.getElementById('nuPwd').value, role:document.getElementById('nuRole').value, is_vehicle_manager:document.getElementById('nuVehicleManager').checked };
+  if (!payload.name||!payload.email||!payload.password){toast('All fields required');return;}
+  const res = await api('/api/auth/users',{method:'POST',body:JSON.stringify(payload)});
+  if (!res.ok){const e=await res.json();toast(e.detail||'Error');return;}
+  toast('✓ User created');
+  ['nuName','nuEmail','nuPwd'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('nuVehicleManager').checked=false;
+  loadUsers();
+}
+
+async function deactivateUser(id) {
+  if (!confirm('Deactivate this user?')) return;
+  await api(`/api/auth/users/${id}`,{method:'PATCH',body:JSON.stringify({is_active:false})});
+  toast('User deactivated'); loadUsers();
+}
+
+// ═══ INIT ════════════════════════════════════════════════════════════════════
+document.addEventListener('keydown', e=>{
+  if (e.key==='Enter' && document.getElementById('loginScreen').classList.contains('active')) doLogin();
+  if (e.key==='Escape') document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open'));
+});
+checkAuth();
+</script>
+</body>
+</html>
